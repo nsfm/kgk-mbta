@@ -51,20 +51,20 @@ var_dump($routelist['mode'][1]); //red line routes
 */
 
 //List and name all the routes you're tracking
-$routes = array(array('Red Line, Braintree'    => '933_'),
-                array('Red Line, Ashmont'      => '931_'),
-                array('Green Line'             => '810_'),
-                array('Green Line, B Branch?'  => '813_'),
-                array('Green Line'             => '823_'),
-                array('Green Line'             => '830_'),
-                array('Green Line, C Branch'   => '831_'),
-                array('Green Line'             => '840_'),
-                array('Green Line'             => '842_'),
-                array('Green Line, D Branch'   => '851_'),
-                array('Green Line, D Branch'   => '852_'),
-                array('Green Line, E Branch'   => '880_'),
-                array('Green Line'             => '882_'),
-                array('Green Line'             => '899_'));
+$routes = array(array('Red Line, Braintree'  => '933_'),
+                array('Red Line, Ashmont'    => '931_'),
+                array('Green Line'           => '810_'),
+                array('Green Line, B Branch' => '813_'),
+                array('Green Line'           => '823_'),
+                array('Green Line'           => '830_'),
+                array('Green Line, C Branch' => '831_'),
+                array('Green Line'           => '840_'),
+                array('Green Line'           => '842_'),
+                array('Green Line, D Branch' => '851_'),
+                array('Green Line, D Branch' => '852_'),
+                array('Green Line, E Branch' => '880_'),
+                array('Green Line'           => '882_'),
+                array('Green Line'           => '899_'));
 
 //iterate through each given route
 foreach($routes as $route) {
