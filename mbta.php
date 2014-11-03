@@ -36,7 +36,7 @@ if($database) {
 
 	//give up if it failed
 	if (mysqli_connect_errno()) {
-			die('Database failed to connect.');
+		die('Database failed to connect.');
 	}
 } else {
 	say('Skipping database.'.PHP_EOL);
@@ -92,8 +92,8 @@ foreach($routes as $route) {
 					$query = "INSERT INTO mbta.vehicle (uid,vehicle_id,vehicle_lat,vehicle_lon,vehicle_bearing,vehicle_timestamp,trip_id,trip_headsign,direction_id_fk,route_id_fk) VALUES('{$uid}','{$train['vehicle_id']}','{$train['vehicle_lat']}','{$train['vehicle_lon']}','{$train['vehicle_bearing']}','{$train['vehicle_timestamp']}','{$trip['trip_id']}','{$trip['trip_headsign']}','{$direction['direction_id']}','{$id}')";
 					//attempt to insert the data
 					if(!mysqli_query($database, $query)) {
-								//kill the script if this fails, since that implies something is wrong
-								die('Failed to query database!'.PHP_EOL."Query: {$query}".PHP_EOL);
+						//kill the script if this fails, since that implies something else is wrong
+						die('Failed to query database!'.PHP_EOL."Query: {$query}".PHP_EOL);
 					}
 				}
 			}
