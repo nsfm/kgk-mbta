@@ -21,6 +21,11 @@ require(lattice)
 #Function declarations for this project
 #Haversine function for geodesic distance calculation (exciting to say out loud)
 geodist <- function(long1, lat1, long2, lat2) {
+  # Convert degrees to radians
+  long1 <- deg2rad(long1)
+  lat1 <- deg2rad(lat1)
+  long2 <- deg2rad(long2)
+  lat2 <- deg2rad(lat2)
   R <- 6371 # Earth mean radius [km]
   delta.long <- (long2 - long1)
   delta.lat <- (lat2 - lat1)
@@ -29,6 +34,8 @@ geodist <- function(long1, lat1, long2, lat2) {
   d = R * c
   return(d) # Distance in km
 }
+# Convert degrees to radians
+deg2rad <- function(deg) return(deg*pi/180)
 #random row selector
 randomRows = function(df,n){
   return(df[sample(nrow(df),n),])
@@ -108,7 +115,7 @@ nrow(slowhour)
 
 #make sure we're comparing the same number of observations
 slowhour <- randomRows(slowhour,12000)
-rushhour <- randomRows(slowhour,12000)
+rushhour <- randomRows(rushhour,12000)
 
 #let's show what our rushhour plot looks like
 rushmap <- ggmap(map)
@@ -124,10 +131,11 @@ multiplot(rushmap,slowmap,cols=2)
 
 #try to guess at average vehicle velocity for a dataset
 #this function is VERY SLOW, R is very bad at iteration
+#change the name of the dataset in the query in order to change the data we're looking at
 totalavg <- 0
 count <- 0
 for(t in 1:nrow(trainlist)) {
-  query <- paste(paste("SELECT vehicle_lat,vehicle_lon,vehicle_timestamp,trip_headsign FROM mbtafull WHERE direction_id_fk=0 AND vehicle_id=",trainlist[t,],sep="")," ORDER BY vehicle_timestamp ASC",sep="")
+  query <- paste(paste("SELECT vehicle_lat,vehicle_lon,vehicle_timestamp,trip_headsign FROM rushhour WHERE direction_id_fk=1 AND vehicle_id=",trainlist[t,],sep="")," ORDER BY vehicle_timestamp ASC",sep="")
   thistrain = sqldf(query)
   lastlon <- thistrain$vehicle_lon[1]
   lastlat <- thistrain$vehicle_lat[1]
@@ -141,11 +149,64 @@ for(t in 1:nrow(trainlist)) {
     time <- as.numeric(as.POSIXct(thistrain$vehicle_timestamp[i]))-lasttime
     sign <- thistrain$trip_headsig[i]
     if(grepl(sign,lastsign)) {
-    #return the distance between this point and the last in kilometers
-    dist <- geodist(lon,lat,lastlon,lastlat)
-    speed <- speed+dist/time
-    thiscount <- thiscount+1
-    avgspeed <- speed/thiscount
+      #note, this check will fail on the very last one (oh well)
+      #return the distance between this point and the last in kilometers
+      dist <- geodist(lon,lat,lastlon,lastlat)
+      speed <- speed+dist/time
+      thiscount <- thiscount+1
+      avgspeed <- speed/thiscount
+    } else {
+      #the trip has changed! have to switch things up now
+      thiscount <- 0
+      speed <- 0
+      if(!is.nan(avgspeed) && !is.infinite(avgspeed)) {
+        totalavg <- totalavg+avgspeed
+        print(paste(trainlist[t,],avgspeed))
+        count <- count+1
+      }
+    }
+    lastlon <- thistrain$vehicle_lon[i]
+    lastlat <- thistrain$vehicle_lat[i]
+    lasttime <- as.numeric(as.POSIXct(thistrain$vehicle_timestamp[i]))
+    lastsign <- sign <- thistrain$trip_headsig[i]
+  }
+  thiscount <- 0
+  speed <- 0
+  if(!is.nan(avgspeed) && !is.infinite(avgspeed)) {
+    totalavg <- totalavg+avgspeed
+    count <- count+1
+    print(paste(trainlist[t,],avgspeed))
+  }
+}
+#this is the overall average speed of the dataset
+d1avg <- totalavg/count
+#we need this modifier because of the way R converted the timestamps (I don't know why it was wrong)
+d1avg <- d1avg*1.1
+
+#we have to do it AGAIN to get the other direction
+totalavg <- 0
+count <- 0
+for(t in 1:nrow(trainlist)) {
+  query <- paste(paste("SELECT vehicle_lat,vehicle_lon,vehicle_timestamp,trip_headsign FROM rushhour WHERE direction_id_fk=0 AND vehicle_id=",trainlist[t,],sep="")," ORDER BY vehicle_timestamp ASC",sep="")
+  thistrain = sqldf(query)
+  lastlon <- thistrain$vehicle_lon[1]
+  lastlat <- thistrain$vehicle_lat[1]
+  lasttime <- as.numeric(as.POSIXct(thistrain$vehicle_timestamp[1]))
+  lastsign <- thistrain$trip_headsign[1]
+  thiscount <- 1
+  speed <- 0
+  for(i in 2:nrow(thistrain)) {
+    lon <- thistrain$vehicle_lon[i]
+    lat <- thistrain$vehicle_lat[i]
+    time <- as.numeric(as.POSIXct(thistrain$vehicle_timestamp[i]))-lasttime
+    sign <- thistrain$trip_headsig[i]
+    if(grepl(sign,lastsign)) {
+      #note, this check will fail on the very last one (oh well)
+      #return the distance between this point and the last in kilometers
+      dist <- geodist(lon,lat,lastlon,lastlat)
+      speed <- speed+dist/time
+      thiscount <- thiscount+1
+      avgspeed <- speed/thiscount
     } else {
       #the trip has changed! have to switch things up now
       thiscount <- 0
@@ -170,4 +231,10 @@ for(t in 1:nrow(trainlist)) {
   }
 }
 
-totalavg <- totalavg/count
+#this is the overall average speed of the dataset
+d2avg <- totalavg/count
+#we need this modifier because of the way R converted the timestamps (I don't know why it was wrong)
+d2avg <- d1avg*1.1
+
+#this was probably the most difficult number to acquire EVER
+rushavg = (d1avg+d2avg)/2
