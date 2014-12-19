@@ -16,19 +16,13 @@ $key     = '';
 $options = getopt('qd');
 
 //check to see if we should skip databasing
-if (array_key_exists('d', $options)) {
-	$database = FALSE;
-} else {
-	$database = TRUE;
-}
+$database = !array_key_exists('d', $options);
+
 
 //check to see if we should skip printing results
 global $quiet;
-if (array_key_exists('q', $options)) {
-	$quiet = TRUE;
-} else {
-	$quiet = FALSE;
-}
+$quiet = !array_key_exists('q', $options);
+
 
 if($database) {
 	//connect to the mysql database and return the handle
