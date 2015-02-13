@@ -87,7 +87,7 @@ foreach($routes as $route) {
 					//attempt to insert the data
 					if(!mysqli_query($database, $query)) {
 						//kill the script if this fails, since that implies something else is wrong
-						die('Failed to query database!'.PHP_EOL."Query: {$query}".PHP_EOL);
+						die('Failed to query database!'.PHP_EOL."Query: {$query}".PHP_EOL); 
 					}
 				}
 			}
